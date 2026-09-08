@@ -63,6 +63,7 @@ export default function Home() {
   const [quickFilter, setQuickFilter] = useState("all");
   const [area, setArea] = useState("all");
   const [favoriteIds, setFavoriteIds] = useState([]);
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
 
@@ -88,6 +89,7 @@ export default function Home() {
 
         if (q && !hay.includes(q)) return false;
         if (area !== "all" && x.area !== area) return false;
+        if (showFavoritesOnly && !favoriteIds.includes(x.id)) return false;
         if (intent === "free" && !x.free) return false;
         if (intent === "sport" && x.category !== "sport") return false;
         if (intent === "weekend" && !inWeekend(x)) return false;
@@ -105,7 +107,7 @@ export default function Home() {
         const bScore = (isOpen(b) ? 50 : 0) + (b.free ? 20 : 0) + (includesDate(b, addDays(0)) ? 10 : 0);
         return bScore - aScore;
       });
-  }, [rows, query, area, intent, time]);
+  }, [rows, query, area, favoriteIds, showFavoritesOnly, intent, time]);
 
   useEffect(() => {
     fetch("/api/reservations")
@@ -156,6 +158,15 @@ export default function Home() {
       window.localStorage.setItem("joopjoop-favorites", JSON.stringify(next));
       return next;
     });
+  }
+
+  function resetFilters() {
+    setQuery("");
+    setIntent("all");
+    setTime("open");
+    setQuickFilter("all");
+    setArea("all");
+    setShowFavoritesOnly(false);
   }
 
   return (
@@ -231,7 +242,15 @@ export default function Home() {
             {areas.map((value) => <option key={value} value={value}>{value}</option>)}
           </select>
         </label>
-        <span className="favoriteCount">♡ 찜 {favoriteIds.length}</span>
+        <div className="filterActions">
+          <button
+            className={showFavoritesOnly ? "active" : ""}
+            onClick={() => setShowFavoritesOnly((value) => !value)}
+          >
+            {showFavoritesOnly ? "♥ 찜만 보는 중" : `♡ 찜 ${favoriteIds.length}`}
+          </button>
+          <button className="reset" onClick={resetFilters}>초기화</button>
+        </div>
       </div>
       <p className="filterHint">오늘·내일·주말은 공개 API의 서비스 이용기간 기준이며, 실시간 잔여석이나 시간대별 가능 여부는 아닙니다.</p>
 

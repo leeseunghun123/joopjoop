@@ -57,7 +57,10 @@ a{text-decoration:none;color:inherit}
 .filterTools{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0 0}
 .areaSelect{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:850}
 .areaSelect select{max-width:150px;border:1px solid var(--line);border-radius:10px;background:#fff;padding:8px 10px;color:var(--text)}
-.favoriteCount{font-size:12px;color:var(--muted);font-weight:850}
+.filterActions{display:flex;gap:6px}
+.filterActions button{border:1px solid var(--line);border-radius:10px;background:#fff;padding:8px 10px;font-size:12px;font-weight:850;color:#585d58}
+.filterActions button.active{border-color:#f3b7bd;background:#fff0f1;color:#c43e4e}
+.filterActions button.reset{color:var(--muted)}
 .filterHint{margin:10px 0 0;color:var(--muted);font-size:11px;line-height:1.55}
 
 .stats{
