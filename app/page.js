@@ -275,6 +275,7 @@ export default function Home() {
             <div className="meta">
               📍 {x.area} · {x.place}<br />
               🗓 이용범위 {fmt(x.start)} ~ {fmt(x.end)}<br />
+              {x.receiptStart && x.receiptEnd && <>📨 접수기간 {fmt(x.receiptStart)} ~ {fmt(x.receiptEnd)}<br /></>}
               👤 {x.target}
             </div>
 

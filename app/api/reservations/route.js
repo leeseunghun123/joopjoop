@@ -42,6 +42,8 @@ function mapRow(row, i) {
     receptionOpen: isReceptionOpen(row.SVCSTATNM),
     start: parseDate(row.SVCOPNBGNDT) || parseDate(row.RCPTBGNDT) || new Date().toISOString(),
     end: parseDate(row.SVCOPNENDDT) || parseDate(row.RCPTENDDT) || new Date(Date.now() + 30 * 86400000).toISOString(),
+    receiptStart: parseDate(row.RCPTBGNDT),
+    receiptEnd: parseDate(row.RCPTENDDT),
     target: row.USETGTINFO || "이용대상 확인",
     url: row.SVCURL || "https://yeyak.seoul.go.kr/",
     summary: `${row.MINCLASSNM || "체육시설"} · 공식 페이지에서 세부 예약시간 확인`
