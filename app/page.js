@@ -61,8 +61,51 @@ export default function Home() {
   const [intent, setIntent] = useState("all");
   const [time, setTime] = useState("all");
   const [quickFilter, setQuickFilter] = useState("all");
+  const [area, setArea] = useState("all");
+  const [favoriteIds, setFavoriteIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+
+  useEffect(() => {
+    try {
+      setFavoriteIds(JSON.parse(window.localStorage.getItem("joopjoop-favorites") || "[]"));
+    } catch {
+      window.localStorage.removeItem("joopjoop-favorites");
+    }
+  }, []);
+
+  const areas = useMemo(
+    () => [...new Set(rows.map((row) => row.area).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ko")),
+    [rows]
+  );
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+
+    return rows
+      .filter((x) => {
+        const hay = `${x.name} ${x.place} ${x.area} ${x.target} ${x.summary} ${x.free ? "무료" : ""}`.toLowerCase();
+
+        if (q && !hay.includes(q)) return false;
+        if (area !== "all" && x.area !== area) return false;
+        if (intent === "free" && !x.free) return false;
+        if (intent === "sport" && x.category !== "sport") return false;
+        if (intent === "weekend" && !inWeekend(x)) return false;
+
+        if (time === "today" && !includesDate(x, addDays(0))) return false;
+        if (time === "tomorrow" && !includesDate(x, addDays(1))) return false;
+        if (time === "weekend" && !inWeekend(x)) return false;
+        if (time === "open" && !isOpen(x)) return false;
+        if (time === "free" && !x.free) return false;
+
+        return true;
+      })
+      .sort((a, b) => {
+        const aScore = (isOpen(a) ? 50 : 0) + (a.free ? 20 : 0) + (includesDate(a, addDays(0)) ? 10 : 0);
+        const bScore = (isOpen(b) ? 50 : 0) + (b.free ? 20 : 0) + (includesDate(b, addDays(0)) ? 10 : 0);
+        return bScore - aScore;
+      });
+  }, [rows, query, area, intent, time]);
 
   useEffect(() => {
     fetch("/api/reservations")
@@ -81,33 +124,6 @@ export default function Home() {
       })
       .finally(() => setLoading(false));
   }, []);
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-
-    return rows
-      .filter((x) => {
-        const hay = `${x.name} ${x.place} ${x.area} ${x.target} ${x.summary} ${x.free ? "무료" : ""}`.toLowerCase();
-
-        if (q && !hay.includes(q)) return false;
-        if (intent === "free" && !x.free) return false;
-        if (intent === "sport" && x.category !== "sport") return false;
-        if (intent === "weekend" && !inWeekend(x)) return false;
-
-        if (time === "today" && !includesDate(x, addDays(0))) return false;
-        if (time === "tomorrow" && !includesDate(x, addDays(1))) return false;
-        if (time === "weekend" && !inWeekend(x)) return false;
-        if (time === "open" && !isOpen(x)) return false;
-        if (time === "free" && !x.free) return false;
-
-        return true;
-      })
-      .sort((a, b) => {
-        const aScore = (isOpen(a) ? 50 : 0) + (a.free ? 20 : 0) + (includesDate(a, addDays(0)) ? 10 : 0);
-        const bScore = (isOpen(b) ? 50 : 0) + (b.free ? 20 : 0) + (includesDate(b, addDays(0)) ? 10 : 0);
-        return bScore - aScore;
-      });
-  }, [rows, query, intent, time]);
 
   const stats = {
     open: filtered.filter(isOpen).length,
@@ -132,6 +148,14 @@ export default function Home() {
     setQuickFilter("custom");
     setIntent("all");
     setTime(value);
+  }
+
+  function toggleFavorite(id) {
+    setFavoriteIds((current) => {
+      const next = current.includes(id) ? current.filter((item) => item !== id) : [...current, id];
+      window.localStorage.setItem("joopjoop-favorites", JSON.stringify(next));
+      return next;
+    });
   }
 
   return (
@@ -199,9 +223,21 @@ export default function Home() {
         ))}
       </section>
 
+      <div className="filterTools">
+        <label className="areaSelect">
+          <span>지역</span>
+          <select value={area} onChange={(e) => setArea(e.target.value)}>
+            <option value="all">서울 전체</option>
+            {areas.map((value) => <option key={value} value={value}>{value}</option>)}
+          </select>
+        </label>
+        <span className="favoriteCount">♡ 찜 {favoriteIds.length}</span>
+      </div>
+      <p className="filterHint">오늘·내일·주말은 공개 API의 서비스 이용기간 기준이며, 실시간 잔여석이나 시간대별 가능 여부는 아닙니다.</p>
+
       <section className="sectionHead">
         <h2>지금 주울 수 있는 것</h2>
-        <span>{loading ? "불러오는 중" : `${filtered.length}개`}</span>
+        <span>{loading ? "불러오는 중" : `${filtered.length}개 · 찜 ${favoriteIds.length}`}</span>
       </section>
 
       {loadError && <p className="notice" role="status">{loadError}</p>}
@@ -227,14 +263,16 @@ export default function Home() {
 
             <div className="grow" />
 
-            <a
-              href={x.url}
-              target="_blank"
-              rel="noreferrer"
-              className="primary"
-            >
-              공식예약 →
-            </a>
+            <div className="cardActions">
+              <button
+                className={`favorite ${favoriteIds.includes(x.id) ? "saved" : ""}`}
+                onClick={() => toggleFavorite(x.id)}
+                aria-pressed={favoriteIds.includes(x.id)}
+              >
+                {favoriteIds.includes(x.id) ? "♥ 찜됨" : "♡ 찜"}
+              </button>
+              <a href={x.url} target="_blank" rel="noreferrer" className="primary">공식예약 →</a>
+            </div>
           </article>
         ))}
 
