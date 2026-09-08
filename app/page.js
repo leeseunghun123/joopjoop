@@ -60,6 +60,7 @@ export default function Home() {
   const [query, setQuery] = useState("");
   const [intent, setIntent] = useState("all");
   const [time, setTime] = useState("all");
+  const [quickFilter, setQuickFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
 
@@ -109,10 +110,29 @@ export default function Home() {
   }, [rows, query, intent, time]);
 
   const stats = {
-    open: rows.filter(isOpen).length,
-    free: rows.filter((x) => x.free).length,
-    weekend: rows.filter(inWeekend).length
+    open: filtered.filter(isOpen).length,
+    free: filtered.filter((x) => x.free).length,
+    total: filtered.length
   };
+
+  function selectQuickFilter(value) {
+    const filters = {
+      all: { intent: "all", time: "open" },
+      free: { intent: "free", time: "all" },
+      sport: { intent: "sport", time: "all" },
+      weekend: { intent: "all", time: "weekend" }
+    };
+
+    setQuickFilter(value);
+    setIntent(filters[value].intent);
+    setTime(filters[value].time);
+  }
+
+  function selectDetailFilter(value) {
+    setQuickFilter("custom");
+    setIntent("all");
+    setTime(value);
+  }
 
   return (
     <main className="shell">
@@ -145,8 +165,8 @@ export default function Home() {
           ].map(([value, label]) => (
             <button
               key={value}
-              className={intent === value ? "active" : ""}
-              onClick={() => setIntent(value)}
+              className={quickFilter === value ? "active" : ""}
+              onClick={() => selectQuickFilter(value)}
             >
               {label}
             </button>
@@ -157,7 +177,7 @@ export default function Home() {
       <section className="stats">
         <div><b>{stats.open}</b><span>접수중</span></div>
         <div><b>{stats.free}</b><span>무료</span></div>
-        <div><b>{stats.weekend}</b><span>주말 이용범위</span></div>
+        <div><b>{stats.total}</b><span>현재 결과</span></div>
       </section>
 
       <section className="filters">
@@ -170,9 +190,9 @@ export default function Home() {
           ["free", "무료"]
         ].map(([value, label]) => (
           <button
-            key={value}
-            className={time === value ? "active" : ""}
-            onClick={() => setTime(value)}
+              key={value}
+              className={quickFilter === "custom" && time === value ? "active" : ""}
+              onClick={() => selectDetailFilter(value)}
           >
             {label}
           </button>
