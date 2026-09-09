@@ -98,14 +98,23 @@ a{text-decoration:none;color:inherit}
 .bookingInfo b{font-size:11px;line-height:1.45}
 .bookingInfo b.available{color:#167448}
 .note{margin-top:10px;background:#f6f7f3;border-radius:12px;padding:10px;font-size:11px;color:#5d615d;line-height:1.55}
+.detailPanel{margin-top:10px;border:1px solid #dfe5dd;border-radius:12px;padding:12px;background:#fbfcfa}
+.detailPanel h4{margin:0 0 9px;font-size:12px}
+.detailPanel p{margin:0;font-size:11px;line-height:1.6;color:var(--muted)}
+.detailPanel dl{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:0}
+.detailPanel dl div{display:flex;gap:5px;font-size:11px;line-height:1.45}
+.detailPanel dt{color:var(--muted);white-space:nowrap}
+.detailPanel dd{margin:0;font-weight:800}
+.detailCopy{margin-top:9px!important}
 .grow{flex:1}
-.cardActions{display:grid;grid-template-columns:auto 1fr;gap:8px;margin-top:14px}
+.cardActions{display:grid;grid-template-columns:auto auto 1fr;gap:8px;margin-top:14px}
 .primary{
   background:#111;color:#fff;border-radius:13px;
   text-align:center;padding:11px 12px;font-size:12px;font-weight:900
 }
 .favorite{border:1px solid var(--line);border-radius:13px;background:#fff;padding:0 11px;font-size:12px;font-weight:900;color:#585d58}
 .favorite.saved{border-color:#f3b7bd;background:#fff0f1;color:#c43e4e}
+.detailToggle{border:1px solid var(--line);border-radius:13px;background:#fff;padding:0 11px;font-size:12px;font-weight:900;color:#585d58}
 .empty{grid-column:1/-1;text-align:center;padding:36px;background:#fff;border:1px dashed #ccc;border-radius:20px;color:var(--muted)}
 footer{padding:28px 0 0;color:var(--muted);font-size:10px;line-height:1.6}
 

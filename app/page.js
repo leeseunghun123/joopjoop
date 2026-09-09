@@ -72,6 +72,9 @@ export default function Home() {
   const [area, setArea] = useState("all");
   const [favoriteIds, setFavoriteIds] = useState([]);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [expandedId, setExpandedId] = useState("");
+  const [detailsById, setDetailsById] = useState({});
+  const [detailError, setDetailError] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
 
@@ -177,6 +180,28 @@ export default function Home() {
     setShowFavoritesOnly(false);
   }
 
+  async function toggleDetails(id) {
+    if (expandedId === id) {
+      setExpandedId("");
+      return;
+    }
+
+    setExpandedId(id);
+    setDetailError("");
+    if (detailsById[id]) return;
+
+    setDetailsById((current) => ({ ...current, [id]: { loading: true } }));
+    try {
+      const response = await fetch(`/api/reservations/${encodeURIComponent(id)}`);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+      setDetailsById((current) => ({ ...current, [id]: data }));
+    } catch {
+      setDetailsById((current) => ({ ...current, [id]: null }));
+      setDetailError(id);
+    }
+  }
+
   return (
     <main className="shell">
       <header className="topbar">
@@ -272,6 +297,10 @@ export default function Home() {
       <section className="grid">
         {filtered.map((x) => (
           <article className="card" key={x.id}>
+            {(() => {
+              const detail = detailsById[x.id];
+              const isExpanded = expandedId === x.id;
+              return <>
             <div className="badges">
               {x.free && <span className="badge free">무료</span>}
               <span className={`badge ${isOpen(x) ? "open" : ""}`}>{x.status}</span>
@@ -297,6 +326,25 @@ export default function Home() {
 
             <div className="note">{x.summary}</div>
 
+            {isExpanded && (
+              <section className="detailPanel" aria-live="polite">
+                {detail?.loading && <p>공식 예약 조건을 불러오는 중…</p>}
+                {detailError === x.id && <p>상세 정보를 불러오지 못했습니다. 공식 페이지에서 확인해주세요.</p>}
+                {detail && !detail.loading && <>
+                  <h4>공식 예약 조건</h4>
+                  <dl>
+                    <div><dt>선정 방식</dt><dd>{detail.selection}</dd></div>
+                    <div><dt>신청 방법</dt><dd>{detail.method}</dd></div>
+                    <div><dt>신청 인원</dt><dd>{detail.people}</dd></div>
+                    <div><dt>운영 시간</dt><dd>{detail.hours}</dd></div>
+                    <div><dt>취소 기준</dt><dd>{detail.cancellation}</dd></div>
+                    {detail.phone && <div><dt>문의</dt><dd>{detail.phone}</dd></div>}
+                  </dl>
+                  {detail.notice && <p className="detailCopy">{detail.notice}</p>}
+                </>}
+              </section>
+            )}
+
             <div className="grow" />
 
             <div className="cardActions">
@@ -307,8 +355,13 @@ export default function Home() {
               >
                 {favoriteIds.includes(x.id) ? "♥ 찜됨" : "♡ 찜"}
               </button>
+              <button className="detailToggle" onClick={() => toggleDetails(x.id)} aria-expanded={isExpanded}>
+                {isExpanded ? "조건 닫기" : "예약 조건"}
+              </button>
               <a href={x.url} target="_blank" rel="noreferrer" className="primary">공식예약 →</a>
             </div>
+              </>;
+            })()}
           </article>
         ))}
 
