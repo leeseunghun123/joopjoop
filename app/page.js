@@ -41,7 +41,15 @@ function isOpen(item) {
 
 function fmt(v) {
   const d = new Date(v);
-  return `${d.getMonth() + 1}/${d.getDate()}`;
+  const currentYear = new Date().getFullYear();
+  const year = d.getFullYear() === currentYear ? "" : `${d.getFullYear()}년 `;
+  return `${year}${d.getMonth() + 1}월 ${d.getDate()}일`;
+}
+
+function bookingMessage(item) {
+  if (isOpen(item) && item.receiptEnd) return `지금 신청 가능 · ${fmt(item.receiptEnd)} 마감`;
+  if (item.receiptStart && new Date(item.receiptStart) > new Date()) return `${fmt(item.receiptStart)}부터 신청`;
+  return isOpen(item) ? "지금 신청 가능" : "신청 가능 여부 확인 필요";
 }
 
 function icon(cat) {
@@ -218,8 +226,8 @@ export default function Home() {
       <section className="filters">
         {[
           ["all", "전체"],
-          ["today", "오늘 이용범위"],
-          ["tomorrow", "내일 이용범위"],
+          ["today", "오늘 이용"],
+          ["tomorrow", "내일 이용"],
           ["weekend", "주말"],
           ["open", "접수중"],
           ["free", "무료"]
@@ -267,16 +275,24 @@ export default function Home() {
             <div className="badges">
               {x.free && <span className="badge free">무료</span>}
               <span className={`badge ${isOpen(x) ? "open" : ""}`}>{x.status}</span>
-              {inWeekend(x) && <span className="badge">주말 범위</span>}
             </div>
 
             <h3>{icon(x.category)} {x.name}</h3>
 
             <div className="meta">
               📍 {x.area} · {x.place}<br />
-              🗓 이용범위 {fmt(x.start)} ~ {fmt(x.end)}<br />
-              {x.receiptStart && x.receiptEnd && <>📨 접수기간 {fmt(x.receiptStart)} ~ {fmt(x.receiptEnd)}<br /></>}
               👤 {x.target}
+            </div>
+
+            <div className="bookingInfo">
+              <div>
+                <span>예약 신청</span>
+                <b className={isOpen(x) ? "available" : ""}>{bookingMessage(x)}</b>
+              </div>
+              <div>
+                <span>이용 가능</span>
+                <b>{fmt(x.start)} ~ {fmt(x.end)}</b>
+              </div>
             </div>
 
             <div className="note">{x.summary}</div>
@@ -302,7 +318,7 @@ export default function Home() {
       </section>
 
       <footer>
-        서울 열린데이터광장 공공서비스예약 정보의 서비스 상태와 이용기간을 기준으로 표시합니다. “오늘”은 시간대별 잔여석을 뜻하지 않습니다.
+        서울 열린데이터광장 서비스 상태와 이용기간 기준입니다. 실제 예약 시간과 잔여석은 공식예약 페이지에서 확인하세요.
       </footer>
     </main>
   );
